@@ -27,8 +27,6 @@ import (
 	"compress/gzip"
 	"encoding/csv"
 	"github.com/pkg/errors"
-	"go.arpabet.com/files/config"
-	"go.arpabet.com/files/files_api"
 	"io"
 	"os"
 	"strings"
@@ -38,10 +36,10 @@ type csvStreamWriter struct {
 	fw   io.Writer
 	gzw   *gzip.Writer
 	csvw  *csv.Writer
-	valueProcessors []files_api.CsvValueProcessor
+	valueProcessors []CsvValueProcessor
 }
 
-func NewCsvStream(fw io.Writer, gzipEnabled bool, valueProcessors ...files_api.CsvValueProcessor) files_api.CsvWriter {
+func NewCsvStream(fw io.Writer, gzipEnabled bool, valueProcessors ...CsvValueProcessor) CsvWriter {
 
 	t := &csvStreamWriter{
 		fw:              fw,
@@ -80,10 +78,10 @@ type csvFileWriter struct {
 	fw   *bufio.Writer
 	gzw   *gzip.Writer
 	csvw  *csv.Writer
-	valueProcessors []files_api.CsvValueProcessor
+	valueProcessors []CsvValueProcessor
 }
 
-func NewCsvFile(filePath string, valueProcessors ...files_api.CsvValueProcessor) (files_api.CsvWriter, error) {
+func NewCsvFile(filePath string, valueProcessors ...CsvValueProcessor) (CsvWriter, error) {
 
 	var err error
 	t := new(csvFileWriter)
@@ -94,7 +92,7 @@ func NewCsvFile(filePath string, valueProcessors ...files_api.CsvValueProcessor)
 		return nil, errors.Errorf("file create error '%s', %v", filePath, err)
 	}
 
-	t.fw = bufio.NewWriterSize(t.fd, config.FileRWBlockSize)
+	t.fw = bufio.NewWriterSize(t.fd, FileRWBlockSize)
 
 	if strings.HasSuffix(filePath, ".gz") {
 		t.gzw = gzip.NewWriter(t.fw)
@@ -124,7 +122,7 @@ func (t *csvFileWriter) Write(values ...string) error {
 	}
 }
 
-func zipValues(processors []files_api.CsvValueProcessor, list []string) []string {
+func zipValues(processors []CsvValueProcessor, list []string) []string {
 	arr := make([]string, 0, len(list))
 	for _, v := range list {
 		for _, p := range processors {
@@ -139,10 +137,10 @@ type csvStreamReader struct {
 	fr   io.Reader
 	gzr   *gzip.Reader
 	csvr  *csv.Reader
-	valueProcessors []files_api.CsvValueProcessor
+	valueProcessors []CsvValueProcessor
 }
 
-func CsvStream(fr io.Reader, gzipEnabled bool, valueProcessors ...files_api.CsvValueProcessor) (files_api.CsvStream, error) {
+func OpenCsvStream(fr io.Reader, gzipEnabled bool, valueProcessors ...CsvValueProcessor) (CsvStream, error) {
 
 	var err error
 	t := &csvStreamReader{
@@ -187,20 +185,20 @@ type csvFileReader struct {
 	fr   *bufio.Reader
 	gzr   *gzip.Reader
 	csvr  *csv.Reader
-	valueProcessors []files_api.CsvValueProcessor
+	valueProcessors []CsvValueProcessor
 }
 
-func OpenCsvFile(filePath string, valueProcessors ...files_api.CsvValueProcessor) (files_api.CsvReader, error) {
+func OpenCsvFile(filePath string, valueProcessors ...CsvValueProcessor) (CsvReader, error) {
 
 	fd, err := os.Open(filePath)
 	if err != nil {
 		return nil, errors.Errorf("file open error '%s', %v", filePath, err)
 	}
 
-	return CsvFile(fd, valueProcessors...)
+	return CsvFileReader(fd, valueProcessors...)
 }
 
-func CsvFile(fd *os.File, valueProcessors ...files_api.CsvValueProcessor) (*csvFileReader, error) {
+func CsvFileReader(fd *os.File, valueProcessors ...CsvValueProcessor) (*csvFileReader, error) {
 
 	var err error
 	t := &csvFileReader{
@@ -208,7 +206,7 @@ func CsvFile(fd *os.File, valueProcessors ...files_api.CsvValueProcessor) (*csvF
 		valueProcessors: valueProcessors,
 	}
 
-	t.fr = bufio.NewReaderSize(t.fd, config.FileRWBlockSize)
+	t.fr = bufio.NewReaderSize(t.fd, FileRWBlockSize)
 
 	if strings.HasSuffix(fd.Name(), ".gz") {
 		t.gzr, err = gzip.NewReader(t.fr)
@@ -231,7 +229,7 @@ func (t *csvFileReader) Close() error {
 	return t.fd.Close()
 }
 
-func (t *csvFileReader) ReadHeader() (files_api.CsvFile, error) {
+func (t *csvFileReader) ReadHeader() (CsvFile, error) {
 	header, err := t.Read()
 	if err != nil {
 		return nil, err
@@ -253,10 +251,10 @@ func (t *csvFileReader) Read() ([]string, error) {
 type csvFile struct {
 	header []string
 	index  map[string]int
-	reader files_api.CsvReader
+	reader CsvReader
 }
 
-func newCsvFile(header []string, reader files_api.CsvReader) *csvFile {
+func newCsvFile(header []string, reader CsvReader) *csvFile {
 
 	index := make(map[string]int)
 	for i, name := range header {
@@ -278,7 +276,7 @@ func (t *csvFile) Index() map[string]int {
 	return t.index
 }
 
-func (t *csvFile) Next() (files_api.CsvRecord, error) {
+func (t *csvFile) Next() (CsvRecord, error) {
 	record, err := t.reader.Read()
 	if err != nil {
 		return nil, err
@@ -321,7 +319,7 @@ type csvSchema struct {
 	index  map[string]int
 }
 
-func NewCsvSchema(header []string) files_api.CsvSchema {
+func NewCsvSchema(header []string) CsvSchema {
 
 	index := make(map[string]int)
 	for i, name := range header {
@@ -334,7 +332,7 @@ func NewCsvSchema(header []string) files_api.CsvSchema {
 	}
 }
 
-func (t *csvSchema) Record(record []string) files_api.CsvRecord {
+func (t *csvSchema) Record(record []string) CsvRecord {
 	return csvSchemaRecord {
 		record,
 		t,
@@ -385,7 +383,7 @@ func SplitCsvFile(inputFilePath string, limit int, partFn func (int) string) ([]
 	}
 
 	var parts []string
-	var writer files_api.CsvWriter
+	var writer CsvWriter
 
 	partNum := 1
 	for cnt := limit; err == nil; cnt++ {

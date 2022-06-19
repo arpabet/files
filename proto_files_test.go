@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"go.arpabet.com/files"
-	"go.arpabet.com/files/files_api"
 	"google.golang.org/grpc/profiling/proto"
 	"io"
 	"io/ioutil"
@@ -76,7 +75,7 @@ func writeProto(t *testing.T, filePath string) {
 	writeProtoStream(t, pf)
 }
 
-func writeProtoStream(t *testing.T, pf files_api.ProtoWriter) {
+func writeProtoStream(t *testing.T, pf files.ProtoWriter) {
 
 	obj1 := &proto.Stat{
 		Tags:                 "obj1",
@@ -105,7 +104,7 @@ func readProto(t *testing.T, filePath string) {
 
 }
 
-func readProtoStream(t *testing.T, reader files_api.ProtoReader) {
+func readProtoStream(t *testing.T, reader files.ProtoReader) {
 
 	var obj1 proto.Stat
 

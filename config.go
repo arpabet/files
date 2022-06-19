@@ -20,7 +20,7 @@
 	THE SOFTWARE.
 */
 
-package config
+package files
 
 import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

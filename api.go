@@ -20,7 +20,7 @@
 	THE SOFTWARE.
 */
 
-package files_api
+package files
 
 import (
 	"encoding/json"

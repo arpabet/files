@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"go.arpabet.com/files"
-	"go.arpabet.com/files/files_api"
 	"io"
 	"io/ioutil"
 	"os"
@@ -55,7 +54,7 @@ func TestCsvWriteAndRead(t *testing.T) {
 	require.Equal(t, buf.Bytes(), content)
 	require.Equal(t, "123,#,#,#,#\n", string(content))
 	readCsv(t, filePath)
-	stream, err := files.CsvStream(bytes.NewReader(content), false, strings.TrimSpace, files.RemoveHash)
+	stream, err := files.OpenCsvStream(bytes.NewReader(content), false, strings.TrimSpace, files.RemoveHash)
 	readCsvStream(t, stream)
 
 	// Test With Header
@@ -89,7 +88,7 @@ func readCsv(t *testing.T, filePath string) {
 	require.NoError(t, err)
 }
 
-func readCsvStream(t *testing.T, reader files_api.CsvStream) {
+func readCsvStream(t *testing.T, reader files.CsvStream) {
 
 	record, err := reader.Read()
 	require.NoError(t, err)
@@ -145,7 +144,7 @@ func writeCsv(t *testing.T, filePath string) {
 	writeCsvStream(t, csv)
 }
 
-func writeCsvStream(t *testing.T, csv files_api.CsvWriter) {
+func writeCsvStream(t *testing.T, csv files.CsvWriter) {
 
 	err := csv.Write(" 123 ", "", " ", "null", "NaN")
 	require.NoError(t, err)

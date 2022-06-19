@@ -29,8 +29,6 @@ import (
 	"encoding/binary"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
-	"go.arpabet.com/files/config"
-	"go.arpabet.com/files/files_api"
 	"io"
 	"os"
 	"strings"
@@ -44,14 +42,14 @@ type protoStreamReader struct {
 	lenBuf  [4]byte
 }
 
-func ProtoStream(r io.Reader, gzipEnabled bool) (files_api.ProtoReader, error) {
+func ProtoStream(r io.Reader, gzipEnabled bool) (ProtoReader, error) {
 
 	var err error
 	t := &protoStreamReader{
 		fd: r,
 	}
 
-	t.fr = bufio.NewReaderSize(t.fd, config.FileRWBlockSize)
+	t.fr = bufio.NewReaderSize(t.fd, FileRWBlockSize)
 
 	if gzipEnabled {
 		t.gzr, err = gzip.NewReader(t.fr)
@@ -106,7 +104,7 @@ type protoFileReader struct {
 	lenBuf  [4]byte
 }
 
-func OpenProtoFile(filePath string) (files_api.ProtoReader, error) {
+func OpenProtoFile(filePath string) (ProtoReader, error) {
 
 	fd, err := os.Open(filePath)
 	if err != nil {
@@ -116,14 +114,14 @@ func OpenProtoFile(filePath string) (files_api.ProtoReader, error) {
 	return ProtoFile(fd)
 }
 
-func ProtoFile(fd *os.File) (files_api.ProtoReader, error) {
+func ProtoFile(fd *os.File) (ProtoReader, error) {
 
 	var err error
 	t := &protoFileReader{
 		fd: fd,
 	}
 
-	t.fr = bufio.NewReaderSize(t.fd, config.FileRWBlockSize)
+	t.fr = bufio.NewReaderSize(t.fd, FileRWBlockSize)
 
 	if strings.HasSuffix(fd.Name(), ".gz") {
 		t.gzr, err = gzip.NewReader(t.fr)
@@ -178,17 +176,17 @@ type protoStreamWriter struct {
 	w    io.Writer
 }
 
-func NewProtoStream(fd io.Writer, gzipEnabled bool) files_api.ProtoWriter {
+func NewProtoStream(fd io.Writer, gzipEnabled bool) ProtoWriter {
 
 	t := &protoStreamWriter{
 		fd:              fd,
 	}
 
-	t.fw = bufio.NewWriterSize(fd, config.FileRWBlockSize)
+	t.fw = bufio.NewWriterSize(fd, FileRWBlockSize)
 
 	if gzipEnabled {
 		t.gzw = gzip.NewWriter(t.fw)
-		t.bw = bufio.NewWriterSize(t.gzw, config.FileRWBlockSize)
+		t.bw = bufio.NewWriterSize(t.gzw, FileRWBlockSize)
 		t.w = t.bw
 	} else {
 		t.w = t.fw
@@ -247,13 +245,13 @@ type protoBufWriter struct {
 	w    io.Writer
 }
 
-func NewProtoBuf(gzipEnabled bool) (files_api.ProtoWriter, error) {
+func NewProtoBuf(gzipEnabled bool) (ProtoWriter, error) {
 
 	t := new(protoBufWriter)
 
 	if gzipEnabled {
 		t.gzw = gzip.NewWriter(&t.fw)
-		t.bw = bufio.NewWriterSize(t.gzw, config.FileRWBlockSize)
+		t.bw = bufio.NewWriterSize(t.gzw, FileRWBlockSize)
 		t.w = t.bw
 	} else {
 		t.w = &t.fw
@@ -293,7 +291,7 @@ type protoFileWriter struct {
 	w    io.Writer
 }
 
-func NewProtoFile(filePath string) (files_api.ProtoWriter, error) {
+func NewProtoFile(filePath string) (ProtoWriter, error) {
 
 	var err error
 	t := new(protoFileWriter)
@@ -303,11 +301,11 @@ func NewProtoFile(filePath string) (files_api.ProtoWriter, error) {
 		return nil, errors.Errorf("file create error '%s', %v", filePath, err)
 	}
 
-	t.fw = bufio.NewWriterSize(t.fd, config.FileRWBlockSize)
+	t.fw = bufio.NewWriterSize(t.fd, FileRWBlockSize)
 
 	if strings.HasSuffix(filePath, ".gz") {
 		t.gzw = gzip.NewWriter(t.fw)
-		t.bw = bufio.NewWriterSize(t.gzw, config.FileRWBlockSize)
+		t.bw = bufio.NewWriterSize(t.gzw, FileRWBlockSize)
 		t.w = t.bw
 	} else {
 		t.w = t.fw
@@ -341,7 +339,7 @@ func SplitProtoFile(inputFilePath string, holder proto.Message, limit int, partF
 	defer reader.Close()
 
 	var parts []string
-	var writer files_api.ProtoWriter
+	var writer ProtoWriter
 
 	partNum := 1
 	for cnt := limit; err == nil; cnt++ {

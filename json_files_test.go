@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"go.arpabet.com/files"
-	"go.arpabet.com/files/files_api"
 	"io"
 	"io/ioutil"
 	"os"
@@ -75,7 +74,7 @@ func writeJson(t *testing.T, filePath string) {
 	writeJsonStream(t, js)
 }
 
-func writeJsonStream(t *testing.T, js files_api.JsonWriter) {
+func writeJsonStream(t *testing.T, js files.JsonWriter) {
 
 	obj1 := map[string]string {
 		"test": "obj1",
@@ -104,7 +103,7 @@ func readJson(t *testing.T, filePath string) {
 	readJsonStream(t, reader)
 }
 
-func readJsonStream(t *testing.T, reader files_api.JsonReader) {
+func readJsonStream(t *testing.T, reader files.JsonReader) {
 
 	obj1 := make(map[string]interface{})
 

@@ -27,8 +27,6 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"github.com/pkg/errors"
-	"go.arpabet.com/files/config"
-	"go.arpabet.com/files/files_api"
 	"io"
 	"os"
 	"strings"
@@ -42,17 +40,17 @@ type jsonStreamWriter struct {
 	w     io.Writer
 }
 
-func NewJsonStream(fd io.Writer, gzipEnabled bool) files_api.JsonWriter {
+func NewJsonStream(fd io.Writer, gzipEnabled bool) JsonWriter {
 
 	t := &jsonStreamWriter{
 		fd:              fd,
 	}
 
-	t.fw = bufio.NewWriterSize(t.fd, config.FileRWBlockSize)
+	t.fw = bufio.NewWriterSize(t.fd, FileRWBlockSize)
 
 	if gzipEnabled {
 		t.gzw = gzip.NewWriter(t.fw)
-		t.bw = bufio.NewWriterSize(t.gzw, config.FileRWBlockSize)
+		t.bw = bufio.NewWriterSize(t.gzw, FileRWBlockSize)
 		t.w = t.bw
 	} else {
 		t.w = t.fw
@@ -90,7 +88,7 @@ type jsonFileWriter struct {
 	w    io.Writer
 }
 
-func NewJsonFile(filePath string) (files_api.JsonWriter, error) {
+func NewJsonFile(filePath string) (JsonWriter, error) {
 
 	var err error
 	t := new(jsonFileWriter)
@@ -100,11 +98,11 @@ func NewJsonFile(filePath string) (files_api.JsonWriter, error) {
 		return nil, errors.Errorf("file create error '%s', %v", filePath, err)
 	}
 
-	t.fw = bufio.NewWriterSize(t.fd, config.FileRWBlockSize)
+	t.fw = bufio.NewWriterSize(t.fd, FileRWBlockSize)
 
 	if strings.HasSuffix(filePath, ".gz") {
 		t.gzw = gzip.NewWriter(t.fw)
-		t.bw = bufio.NewWriterSize(t.gzw, config.FileRWBlockSize)
+		t.bw = bufio.NewWriterSize(t.gzw, FileRWBlockSize)
 		t.w = t.bw
 	} else {
 		t.w = t.fw
@@ -137,7 +135,7 @@ func (t *jsonFileWriter) Write(object interface{}) error {
 func JsonWrite(w io.Writer, object interface{}) error {
 
 	var jsonBin []byte
-	jsonBin, err := config.Marshaler.Marshal(object)
+	jsonBin, err := Marshaler.Marshal(object)
 	if err != nil {
 		return err
 	}
@@ -153,7 +151,7 @@ type jsonStreamReader struct {
 	lastErr error
 }
 
-func JsonStream(fr io.Reader, gzipEnabled bool) (files_api.JsonReader, error) {
+func JsonStream(fr io.Reader, gzipEnabled bool) (JsonReader, error) {
 
 	var err error
 	t := &jsonStreamReader{
@@ -209,7 +207,7 @@ func (t *jsonStreamReader) Read(holder interface{}) error {
 			return err
 		}
 	}
-	return config.Marshaler.Unmarshal(jsonBin, holder)
+	return Marshaler.Unmarshal(jsonBin, holder)
 }
 
 type jsonFileReader struct {
@@ -220,7 +218,7 @@ type jsonFileReader struct {
 	lastErr error
 }
 
-func OpenJsonFile(filePath string) (files_api.JsonReader, error) {
+func OpenJsonFile(filePath string) (JsonReader, error) {
 
 	fd, err := os.Open(filePath)
 	if err != nil {
@@ -230,14 +228,14 @@ func OpenJsonFile(filePath string) (files_api.JsonReader, error) {
 	return JsonFile(fd)
 }
 
-func JsonFile(fd *os.File) (files_api.JsonReader, error) {
+func JsonFile(fd *os.File) (JsonReader, error) {
 
 	var err error
 	t := &jsonFileReader{
 		fd: fd,
 	}
 
-	t.fr = bufio.NewReaderSize(t.fd, config.FileRWBlockSize)
+	t.fr = bufio.NewReaderSize(t.fd, FileRWBlockSize)
 
 	if strings.HasSuffix(fd.Name(), ".gz") {
 		t.gzr, err = gzip.NewReader(t.fr)
@@ -288,7 +286,7 @@ func (t *jsonFileReader) Read(holder interface{}) error {
 			return err
 		}
 	}
-	return config.Marshaler.Unmarshal(jsonBin, holder)
+	return Marshaler.Unmarshal(jsonBin, holder)
 }
 
 func SplitJsonFile(inputFilePath string, limit int, partFn func (int) string) ([]string, error) {
@@ -300,7 +298,7 @@ func SplitJsonFile(inputFilePath string, limit int, partFn func (int) string) ([
 	defer reader.Close()
 
 	var parts []string
-	var writer files_api.JsonWriter
+	var writer JsonWriter
 
 	partNum := 1
 	for cnt := limit; err == nil; cnt++ {
