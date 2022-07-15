@@ -6,7 +6,7 @@ package files
 
 import (
 	"encoding/json"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 

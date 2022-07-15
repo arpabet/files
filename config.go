@@ -5,12 +5,18 @@
 package files
 
 import (
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var FileRWBlockSize = 1024 * 64  // 64kb
 
 var Marshaler = &runtime.JSONPb {
-	OrigName: true,
-	EmitDefaults: true,
+	MarshalOptions: protojson.MarshalOptions{
+		UseProtoNames:     true,
+		EmitUnpopulated:   true,
+	},
+	UnmarshalOptions: protojson.UnmarshalOptions {
+		DiscardUnknown: true,
+	},
 }

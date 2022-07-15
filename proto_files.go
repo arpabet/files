@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/binary"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"io"
 	"os"

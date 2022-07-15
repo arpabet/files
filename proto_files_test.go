@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"go.arpabet.com/files"
-	"google.golang.org/grpc/profiling/proto"
 	"io"
 	"io/ioutil"
 	"os"
@@ -59,12 +58,12 @@ func writeProto(t *testing.T, filePath string) {
 
 func writeProtoStream(t *testing.T, pf files.ProtoWriter) {
 
-	obj1 := &proto.Stat{
-		Tags:                 "obj1",
+	obj1 := &Domain{
+		Domain:                 "obj1",
 	}
 
-	obj2 := &proto.Stat{
-		Tags:                 "obj2",
+	obj2 := &Domain{
+		Domain:                 "obj2",
 	}
 
 	_, err := pf.Write(obj1)
@@ -88,19 +87,19 @@ func readProto(t *testing.T, filePath string) {
 
 func readProtoStream(t *testing.T, reader files.ProtoReader) {
 
-	var obj1 proto.Stat
+	var obj1 Domain
 
 	err := reader.ReadTo(&obj1)
 	require.NoError(t, err)
 
-	require.Equal(t, "obj1", obj1.Tags)
+	require.Equal(t, "obj1", obj1.Domain)
 
-	var obj2 proto.Stat
+	var obj2 Domain
 
 	err = reader.ReadTo(&obj2)
 	require.NoError(t, err)
 
-	require.Equal(t, "obj2", obj2.Tags)
+	require.Equal(t, "obj2", obj2.Domain)
 
 	err = reader.ReadTo(&obj2)
 	require.Equal(t, err, io.EOF)
@@ -120,8 +119,8 @@ func TestProtoSplit(t *testing.T) {
 	pf, err := files.NewProtoFile(protoFilePath)
 	require.NoError(t, err)
 
-	obj1 := &proto.Stat{
-		Tags:                 "obj1",
+	obj1 := &Domain{
+		Domain:                 "obj1",
 	}
 
 	for i := 0; i < 100; i++ {
